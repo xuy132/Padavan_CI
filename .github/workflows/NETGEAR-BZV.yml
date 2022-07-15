@@ -61,6 +61,16 @@ jobs:
         wget $TOOLCHAIN_URL
         tar -xvf mipsel-linux-uclibc.tar.xz -C toolchain-3.4.x
 
+      if: github.event.inputs.ssp == 'true'
+      run: |
+        cp -f ssp/shadowsocks.sh $WORK_PATH/trunk/user/shadowsocks/scripts
+        #cp -f ssp/defaults.c $WORK_PATH/trunk/user/shared
+        #cp -f ssp/variables.c $WORK_PATH//trunk/user/httpd
+        cp -f ssp/Shadowsocks.asp $WORK_PATH/trunk/user/www/n56u_ribbon_fixed
+        cd $WORK_PATH/trunk/user/shared
+        sed -i "s#https://cdn.jsdelivr.net/gh/Padavan_CI/ssp/trojan#https://cdn.jsdelivr.net/gh/${{ github.repository_owner }}/Padavan_CI/ssp/trojan#g" ./defaults.c
+        sed -i "s#https://cdn.jsdelivr.net/gh/Padavan_CI/ssp/v2ray#https://cdn.jsdelivr.net/gh/${{ github.repository_owner }}/Padavan_CI/ssp/v2ray#g" ./defaults.c
+
     - name: Custom config
       run: |
         cd $WORK_PATH/trunk
