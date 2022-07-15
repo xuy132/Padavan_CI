@@ -60,35 +60,7 @@ jobs:
         mkdir -p toolchain-3.4.x
         wget $TOOLCHAIN_URL
         tar -xvf mipsel-linux-uclibc.tar.xz -C toolchain-3.4.x
-    - name: Set golang
-      run: |
-        cp -f bashScripts/go.sh $(pwd)
-        sudo chmod 777 ./go.sh
-        bash ./go.sh
-    - name: Set busybox's version to compile
-      run: |
-        cd $WORK_PATH/trunk/user/busybox
-        sed -i "s/SRC_NAME=busybox.*/SRC_NAME=busybox-${{ github.event.inputs.busyboxver }}/g" ./Makefile
-        cd $WORK_PATH/trunk
-        sed -i "s/busybox_id=.*/busybox_id=\"${{ github.event.inputs.busyboxver }}\"/g" ./build_firmware_modify
-    - name: Recovery SSP bin files download from remote
-      if: github.event.inputs.ssp == 'true'
-      run: |
-        cp -f ssp/shadowsocks.sh $WORK_PATH/trunk/user/shadowsocks/scripts
-        #cp -f ssp/defaults.c $WORK_PATH/trunk/user/shared
-        #cp -f ssp/variables.c $WORK_PATH//trunk/user/httpd
-        cp -f ssp/Shadowsocks.asp $WORK_PATH/trunk/user/www/n56u_ribbon_fixed
-        cd $WORK_PATH/trunk/user/shared
-        sed -i "s#https://cdn.jsdelivr.net/gh/Padavan_CI/ssp/trojan#https://cdn.jsdelivr.net/gh/${{ github.repository_owner }}/Padavan_CI/ssp/trojan#g" ./defaults.c
-        sed -i "s#https://cdn.jsdelivr.net/gh/Padavan_CI/ssp/v2ray#https://cdn.jsdelivr.net/gh/${{ github.repository_owner }}/Padavan_CI/ssp/v2ray#g" ./defaults.c
-    - name: Update latest adg
-      run: |
-        cp -f adg/adguardhome.sh $WORK_PATH/trunk/user/adguardhome
-        #cp -f adg/defaults.c $WORK_PATH/trunk/user/shared
-        #cp -f adg/variables.c $WORK_PATH//trunk/user/httpd
-        cp -f adg/Advanced_adguardhome.asp $WORK_PATH/trunk/user/www/n56u_ribbon_fixed
-        #cd $WORK_PATH/trunk/user/adguardhome
-        #sed -i "s#https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/adguardhome/AdGuardHome#https://cdn.jsdelivr.net/gh/${{ github.repository_owner }}/Padavan_CI/adg/AdGuardHome#g" ./adguardhome.sh
+
     - name: Custom config
       run: |
         cd $WORK_PATH/trunk
@@ -217,23 +189,3 @@ jobs:
       with:
         name: Padavan-packages
         path: ${{ env.FIRMWARE }}
-    - name: Upload firmware to WeTransfer
-      if: steps.organize.outputs.status == 'success' && github.event.inputs.uploadwet == 'true'
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
-        echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep -o -E "https?://[a-zA-Z0-9\.\/_&=@$%?~#-]*")"
-        echo "WETRANSFER_URL=$(cat wetransfer.log | grep -o -E "https?://[a-zA-Z0-9\.\/_&=@$%?~#-]*")" >> $GITHUB_ENV
-    - name: Remove obsolete firmwares on artifacts
-      uses: c-hive/gha-remove-artifacts@v1.2.0
-      if: steps.organizer.outputs.status == 'success'
-      with:
-        age: '1 day'
-        skip-recent: 5
-    - name: PushPlus Notification
-      uses: vb1980/Action_PushPlus@master
-      if: steps.organize.outputs.status == 'success' && github.event.inputs.pushplus == 'true'
-      with:
-        token: ${{ secrets.PUSHTOKEN }}
-        title: ${{ env.TARGET_NAME }}_Build_Completed
-        content: Congratulations,<br/>&nbsp;&nbsp;Your **${{ env.TARGET_NAME }}** padavan firmware build completed!<br/>&nbsp;&nbsp;🐮WeTransfer Download Url:${{ env.WETRANSFER_URL }}<br/>&nbsp;&nbsp;Enjoy it🎈🎁!
